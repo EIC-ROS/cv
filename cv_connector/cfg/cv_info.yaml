@@ -1,0 +1,17 @@
+main-state: default
+
+package:
+cv-main_config: 
+
+
+processes:
+  YoloV8-Tracker:
+    port: 
+    CV_type: YoloV8-Tracker
+  Pose-Estimation:
+    
+  Image-Captioning:
+    
+  Face-Recognition:
+    
+  
