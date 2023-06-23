@@ -72,7 +72,8 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
+  std_msgs
+  sensor_msgs
 )
 
 ################################################
@@ -163,6 +164,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   src/cv_connector/custom_socket.py
+  src/CV_connector.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

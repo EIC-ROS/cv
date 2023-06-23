@@ -3,15 +3,21 @@ main-state: default
 package:
 cv-main_config: 
 
+pull-image_size:
+  width: 1280
+  height: 736
 
 processes:
   YoloV8-Tracker:
     port: 
     CV_type: YoloV8-Tracker
   Pose-Estimation:
-    
+    port: 
+    CV_type: YoloV8-Tracker
   Image-Captioning:
-    
+    port: 
+    CV_type: YoloV8-Tracker
   Face-Recognition:
-    
+    port: 
+    CV_type: YoloV8-Tracker
   
