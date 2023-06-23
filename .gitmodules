@@ -1,0 +1,3 @@
+[submodule "out_source/rospy_message_converter"]
+	path = out_source/rospy_message_converter
+	url = https://github.com/DFKI-NI/rospy_message_converter.git
