@@ -1,15 +1,15 @@
-state: default
+cv_state: default
 
 # CV information
 
-package:
-cv-main_config: 
+package:   cv
+cv_config: config.yaml
 
-pull-image_size:
+pull_image_size:
   width: 1280
   height: 736
 
 # ROS information
-camera_info_topic:
-image_info_topic:
-depth_info_topic:
+cinfo_topic: /zed2i/zed_node/rgb/camera_info
+image_topic:  /zed2i/zed_node/rgb/image_rect_color
+depth_topic:  fuck

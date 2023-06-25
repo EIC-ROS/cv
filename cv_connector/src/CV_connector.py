@@ -7,16 +7,19 @@ from sensor_msgs.msg import Image, CameraInfo
 from cv_connector.msg import CV_type
 from cv_connector.srv import CV_srv, CV_srvRequest, CV_srvResponse
 from cv_connector.custom_socket import CustomSocket
+from munch import DefaultMunch
 
 class CVConnector:
 
     bridge = CvBridge()
+    cv_info = DefaultMunch.fromDict(rospy.get_param("/cv_info"))
 
     def __init__(self):
-
-        rospy.wait_for_message("/zed2i/zed_node/rgb/camera_info",CameraInfo)
-        camera_info = message_filters.Subscriber("/zed2i/zed_node/rgb/camera_info",CameraInfo)
-        camera_image = message_filters.Subscriber("/zed2i/zed_node/rgb/image_rect_color",Image)
+        
+        rospy.wait_for_message(self.cv_info.cinfo_topic,CameraInfo)
+        camera_info = message_filters.Subscriber(self.cv_info.cinfo_topic,CameraInfo)
+        camera_image = message_filters.Subscriber(self.cv_info.camera_topic,Image)
+        # depth_image  = message_filters.Subscriber(self.cv_info.depth_topic,Image)
         message_synchronizer = message_filters.TimeSynchronizer([camera_info,camera_image],queue_size=1)
         message_synchronizer.registerCallback(self.image_callback)
 
@@ -45,7 +48,8 @@ class CVConnector:
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(image,desired_encoding="bgr8")
-            pull_image = cv2.resize(cv_image,(1280,736))
+            pull_image_size = self.cv_info.pull_image_size
+            pull_image = cv2.resize(cv_image,(pull_image_size.width,pull_image_size.height))
         except CvBridgeError as e:
             rospy.logerr(e)
             error = True
