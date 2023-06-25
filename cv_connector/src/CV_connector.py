@@ -14,7 +14,7 @@ class CVConnector:
 
     def __init__(self):
 
-        # rospy.wait_for_message("/zed2i/zed_node/rgb/camera_info",CameraInfo)
+        rospy.wait_for_message("/zed2i/zed_node/rgb/camera_info",CameraInfo)
         camera_info = message_filters.Subscriber("/zed2i/zed_node/rgb/camera_info",CameraInfo)
         camera_image = message_filters.Subscriber("/zed2i/zed_node/rgb/image_rect_color",Image)
         message_synchronizer = message_filters.TimeSynchronizer([camera_info,camera_image],queue_size=1)
@@ -52,10 +52,6 @@ class CVConnector:
         except Exception as e:
             rospy.logerr(e)
             error = True
-        
-
-        print(CV_type.YoloV8_Tracker)
-        print(cv_type)
 
         if cv_type.type == CV_type.YoloV8_Tracker:
             res = self.client_yolov8.req(pull_image)
@@ -65,12 +61,10 @@ class CVConnector:
             rospy.logerr("Error CV_type: %s" % (cv_type))
             error = True
 
-        print(res)
-
         srv_res = CV_srvResponse()
         if not error:
             srv_res.sucess = True
-            srv_res.result = res
+            srv_res.result = str(res)
             srv_res.camera_info = info
         
         else:

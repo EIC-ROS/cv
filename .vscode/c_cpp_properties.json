@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/nitro20/walkie_ws/devel/include/**",
+        "/home/nitro20/core_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/nitro20/walkie_ws/src/bringup/CR_ROS/dobot_bringup/include/**",
+        "/home/nitro20/walkie_ws/src/manipulation/out_source/DynamixelSDK/ros/dynamixel_sdk/include/**",
+        "/home/nitro20/core_ws/src/gpd_ros/include/**",
+        "/home/nitro20/core_ws/src/zed-ros-wrapper/zed-ros-interfaces/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
