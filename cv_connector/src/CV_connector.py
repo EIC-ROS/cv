@@ -62,7 +62,7 @@ class CVConnector:
 
     def cv_request(self, cv_req: CV_srvRequest):
         error = False
-        cv_type = CV_srvRequest().CV_type
+        cv_type = cv_req.cv_type
 
         image = self.image
         info = self.info

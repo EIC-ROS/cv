@@ -1,4 +1,4 @@
-cv_connector/CV_type CV_type
+cv_connector/CV_type cv_type
 ---
 bool sucess
 string result
