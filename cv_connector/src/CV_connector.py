@@ -15,9 +15,9 @@ from rospkg import RosPack
 
 class CVConnector:
 
-    with open (RosPack().get_path("cv_connector") + "/cfg/cv_info.yaml", "r") as doc:
+    with open(RosPack().get_path("cv_connector") + "/cfg/cv_info.yaml", "r") as doc:
         cv_info = Munch(yaml.safe_load(doc))
-    
+
     bridge = CvBridge()
 
     def __init__(self):
@@ -135,6 +135,12 @@ class CVConnector:
                                     self.name_map[person_id] = fr_res["name"]
 
                         person["name"] = self.name_map[person_id]
+
+                    else:
+                        if person_id not in self.name_map:
+                            person["name"] = "unknown"
+                        else:
+                            person["name"] = self.name_map[person_id]
             res = msg
 
         else:
