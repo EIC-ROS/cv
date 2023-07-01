@@ -8,23 +8,21 @@ from cv_connector.msg import CV_type
 from cv_connector.srv import CV_srv, CV_srvRequest, CV_srvResponse
 from cv_connector.custom_socket import CustomSocket
 import numpy as np
+from munch import Munch
+import yaml
+from rospkg import RosPack
 
 
 class CVConnector:
 
+    with open (RosPack().get_path("cv_connector") + "/cfg/cv_info.yaml", "r") as doc:
+        cv_info = Munch(yaml.safe_load(doc))
+    
     bridge = CvBridge()
 
     def __init__(self):
 
-        rospy.wait_for_message("/zed2i/zed_node/rgb/camera_info", CameraInfo)
-        camera_info = message_filters.Subscriber(
-            "/zed2i/zed_node/rgb/camera_info", CameraInfo)
-        camera_image = message_filters.Subscriber(
-            "/zed2i/zed_node/rgb/image_rect_color", Image)
-        message_synchronizer = message_filters.TimeSynchronizer(
-            [camera_info, camera_image], queue_size=1)
-        message_synchronizer.registerCallback(self.image_callback)
-
+        self.__subscribing_cameara()
         self.cv_server = rospy.Service(
             "/CV_connect/req_cv", CV_srv, self.cv_request)
         self.__open_socket()
@@ -33,6 +31,17 @@ class CVConnector:
         self.name_map = dict()
         self.frame_count = 0
         self.frame_count_interval = 10
+
+    def __subscribing_cameara(self):
+        rospy.loginfo("Waiting for camera info...")
+        rospy.wait_for_message("/zed2i/zed_node/rgb/camera_info", CameraInfo)
+        camera_info = message_filters.Subscriber(
+            "/zed2i/zed_node/rgb/camera_info", CameraInfo)
+        camera_image = message_filters.Subscriber(
+            "/zed2i/zed_node/rgb/image_rect_color", Image)
+        message_synchronizer = message_filters.TimeSynchronizer(
+            [camera_info, camera_image], queue_size=1)
+        message_synchronizer.registerCallback(self.image_callback)
 
     def __open_socket(self):
         host = socket.gethostname()

@@ -2,14 +2,15 @@ state: default
 
 # CV information
 
-package:
-cv-main_config: 
+package: cv_connector
+cv-main_config: cv_main.yaml
 
 pull-image_size:
   width: 1280
   height: 736
 
 # ROS information
-camera_info_topic:
-image_info_topic:
-depth_info_topic:
+info_topic: p
+image_topic: a
+depth_topic: b
+pcl2_topic: r

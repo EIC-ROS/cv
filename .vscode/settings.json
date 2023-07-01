@@ -9,5 +9,6 @@
         "/home/nitro20/walkie_ws/devel/lib/python3/dist-packages",
         "/home/nitro20/core_ws/devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages"
-    ]
+    ],
+    "cmake.sourceDirectory": "/home/walkie/walkie_ws/src/cv/cv_connector"
 }
