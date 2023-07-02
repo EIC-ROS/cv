@@ -3,4 +3,3 @@ uint8 TargetTracker_Register = 1
 uint8 TargetTracker_Detect = 2
 
 int32 type
-chrome

@@ -13,6 +13,7 @@ from ast import literal_eval
 class haiyaaaa:
     def __init__(self):
         self.client = rospy.ServiceProxy('/CV_connect/req_cv', CV_srv)
+        
         self.marker_pub = rospy.Publisher("/visualization_marker", Marker, queue_size = 2)
 
     def markerpub(self, pX, pY, pZ):
