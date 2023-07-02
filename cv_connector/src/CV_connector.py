@@ -3,7 +3,7 @@ import socket
 from cv_bridge import CvBridge, CvBridgeError
 import message_filters
 import cv2
-from sensor_msgs.msg import Image, CameraInfo
+from sensor_msgs.msg import Image, CameraInfo, PointCloud2
 from cv_connector.msg import CV_type
 from cv_connector.srv import CV_srv, CV_srvRequest, CV_srvResponse
 from cv_connector.custom_socket import CustomSocket
@@ -39,8 +39,12 @@ class CVConnector:
             "/zed2i/zed_node/rgb/camera_info", CameraInfo)
         camera_image = message_filters.Subscriber(
             "/zed2i/zed_node/rgb/image_rect_color", Image)
+        depth_image = message_filters.Subscriber(
+            "/zed2i/zed_node/depth/depth_registered", Image)
+        point_cloud = message_filters.Subscriber(
+            "/zed2i/zed_node/point_cloud/cloud_registered", PointCloud2)
         message_synchronizer = message_filters.TimeSynchronizer(
-            [camera_info, camera_image], queue_size=1)
+            [camera_info, camera_image,depth_image,point_cloud], queue_size=1)
         message_synchronizer.registerCallback(self.image_callback)
 
     def __open_socket(self):
@@ -56,9 +60,11 @@ class CVConnector:
         self.client_ic.clientConnect()
         self.client_fr.clientConnect()
 
-    def image_callback(self, info_msg: CameraInfo, image_msg: Image):
+    def image_callback(self, info_msg: CameraInfo, image_msg: Image, depth_msg: Image, point_cloud_msg: PointCloud2):
         self.image = image_msg
         self.info = info_msg
+        self.depth = depth_msg
+        self.point_cloud = point_cloud_msg
 
     def cv_request(self, cv_req: CV_srvRequest):
         error = False
@@ -66,6 +72,8 @@ class CVConnector:
 
         image = self.image
         info = self.info
+        depth = self.depth
+        point_cloud = self.point_cloud
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(
@@ -149,9 +157,13 @@ class CVConnector:
 
         srv_res = CV_srvResponse()
         if not error:
+            rospy.loginfo("cv_result: %s" % (res))
             srv_res.sucess = True
             srv_res.result = str(res)
             srv_res.camera_info = info
+            srv_res.rgb_image = image
+            srv_res.depth_image = depth
+            srv_res.pointcloud = point_cloud
 
         else:
             srv_res.sucess = False
