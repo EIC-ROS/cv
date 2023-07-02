@@ -106,7 +106,9 @@ class CVConnector:
                     face_img = np.array(register_person["faceflatten"].split(
                         ", ")).reshape(face_dim + [3]).astype("uint8")
                     res = self.client_fr.req_with_command(face_img, command={
-                        "task": "REGISTER", "name": register_name, "only_face": True, "clear_db": True})
+                        "task": "REGISTER", "name": register_name, "only_face": True, "clear_db": True}).get('res')
+                    
+                    res["register_id"] = register_person_id
 
                     self.name_map[register_person_id] = register_name
 
@@ -131,7 +133,7 @@ class CVConnector:
 
                         if person_id not in self.name_map:
                             res_fr = self.client_fr.req_with_command(
-                                pull_image, command={"task": "DETECT", "name": "", "only_face": True})
+                                pull_image, command={"task": "DETECT", "name": "", "only_face": True}).get("res")
                             # print(res_fr)
                             if res_fr:
                                 self.name_map[person_id] = res_fr["name"]
@@ -140,7 +142,7 @@ class CVConnector:
                         else:
                             if self.name_map[person_id] == "unknown" and self.frame_count % self.frame_count_interval == 0:
                                 res_fr = self.client_fr.req_with_command(
-                                    pull_image, command={"task": "DETECT", "name": "", "only_face": True})
+                                    pull_image, command={"task": "DETECT", "name": "", "only_face": True}).get('res')
                                 if res_fr:
                                     self.name_map[person_id] = res_fr["name"]
 

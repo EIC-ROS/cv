@@ -11,4 +11,5 @@ then use the return infomation
 1. rosrun cv_connector CV_connector.py
 2. cv_main.py must be running 
 3. roslaunch zed_wrapper zed2i.launch
-4. c
+4. rosservice call /CV_connect/req_cv "cv_type:
+  type: 1
