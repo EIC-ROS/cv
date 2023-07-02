@@ -74,6 +74,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs
   sensor_msgs
+  cv_connector
 )
 
 ################################################
