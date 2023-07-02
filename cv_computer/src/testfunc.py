@@ -8,14 +8,15 @@ from sensor_msgs.msg import PointCloud2
 from cv_connector.srv import CV_srv, CV_srvRequest
 from cv_connector.msg import CV_type
 from ast import literal_eval
+import message_filters
 
 class cv_computer:
     def __init__(self):
         self.marker_pub = rospy.Publisher('xyz_irl', Marker, queue_size=2)
-        
         self.cv_client = rospy.ServiceProxy('/CV_connect/req_cv', CV_srv)
         
-    def xyframe_to_xyz(self, x, y, pointcloud):
+        
+    def xypix_to_xyz(self, x, y, pointcloud):
         index = (y * pointcloud.row_step) + (x * pointcloud.point_step)
         point = struct.unpack_from('fff', pointcloud.data, offset=index)
         return point
@@ -79,5 +80,5 @@ class cv_computer:
             return None
     
 if __name__ == "__main__":
-    a = cv_compute()
+    a = cv_computer()
         
