@@ -92,14 +92,15 @@ class CVConnector:
         elif cv_type.type == CV_type.TargetTracker_Register:
             msg = self.client_pe.req_with_command(
                 pull_image, {"detect_face": True, "detect_pose": False})
-            if msg:
+            if msg.get('res'):
+                res_pe = msg.get('res')
                 # Find person with biggest area to register
-                register_person_id = max(msg, key=lambda x: msg[x]['area'])
+                register_person_id = max(res_pe, key=lambda x: res_pe[x]['area'])
                 print("Registering ", register_person_id)
 
                 # register_name = input("name: ")
                 register_name = "target"
-                register_person = msg[register_person_id]
+                register_person = res_pe[register_person_id]
                 if "facedim" in register_person:
                     face_dim = register_person["facedim"]
                     face_img = np.array(register_person["faceflatten"].split(
@@ -119,8 +120,9 @@ class CVConnector:
         elif cv_type.type == CV_type.TargetTracker_Detect:
             msg = self.client_pe.req_with_command(
                 pull_image, {"detect_face": True, "detect_pose": False})
-            if msg:
-                for person_id, person in msg.items():
+            if msg.get('res'):
+                res_pe = msg.get("res")
+                for person_id, person in res_pe.items():
                     if "facedim" in person:
                         face_dim = person["facedim"]
                         face_img = np.array(person["faceflatten"].split(
@@ -128,19 +130,19 @@ class CVConnector:
                         person.pop("faceflatten")
 
                         if person_id not in self.name_map:
-                            fr_res = self.client_fr.req_with_command(
+                            res_fr = self.client_fr.req_with_command(
                                 pull_image, command={"task": "DETECT", "name": "", "only_face": True})
-                            # print(fr_res)
-                            if fr_res:
-                                self.name_map[person_id] = fr_res["name"]
+                            # print(res_fr)
+                            if res_fr:
+                                self.name_map[person_id] = res_fr["name"]
                             else:
                                 self.name_map[person_id] = "unknown"
                         else:
                             if self.name_map[person_id] == "unknown" and self.frame_count % self.frame_count_interval == 0:
-                                fr_res = self.client_fr.req_with_command(
+                                res_fr = self.client_fr.req_with_command(
                                     pull_image, command={"task": "DETECT", "name": "", "only_face": True})
-                                if fr_res:
-                                    self.name_map[person_id] = fr_res["name"]
+                                if res_fr:
+                                    self.name_map[person_id] = res_fr["name"]
 
                         person["name"] = self.name_map[person_id]
 
@@ -150,6 +152,25 @@ class CVConnector:
                         else:
                             person["name"] = self.name_map[person_id]
             res = msg
+        
+        elif cv_type.type == CV_type.PoseCaptioning:
+            msg = self.client_pe.req_with_command(
+                pull_image, {"detect_face": False, "detect_pose": False})
+            if msg.get("res"):
+                res_pe = msg.get("res")
+
+                # Find person with biggest area to caption
+                caption_person_id = max(res_pe, key=lambda x: res_pe[x]['area'])
+
+                caption_person = res_pe[caption_person_id]
+                x1, y1, x2, y2 = caption_person["bbox"]
+                cropped_caption_person = pull_image[y1:y2, x1:x2]
+
+                res_ic = self.client_ic.req(pull_image)
+
+                res = res_ic
+            else:
+                res = "No person to caption"
 
         else:
             rospy.logerr("Error CV_type: %s" % (cv_type))
