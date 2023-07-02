@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from sympy import true
 import rospy
 import struct
 from visualization_msgs.msg import Marker
