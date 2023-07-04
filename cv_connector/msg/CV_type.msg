@@ -4,4 +4,3 @@ uint8 TargetTracker_Detect = 2
 uint8 PoseCaptioning = 3
 
 int32 type
-chrome
