@@ -13,6 +13,7 @@ class cv_computer:
     def __init__(self):
         self.marker_pub = rospy.Publisher('xyz_irl', Marker, queue_size=2)
         self.cv_client = rospy.ServiceProxy('/CV_connect/req_cv', CV_srv)
+        self.save_mypoint = (0,0,0)
         
         
     def xypix_to_xyz(self, x, y, pointcloud):
@@ -61,6 +62,7 @@ class cv_computer:
             exit(1)
 
         target_kill_comfirm = False
+        my_dict = my_dict["res"]
 
         for a, dick in my_dict.items():
             if dick['name'] == target:
@@ -71,9 +73,12 @@ class cv_computer:
         if target_kill_comfirm:
             assert isinstance(mypointcloud, PointCloud2)
             index = (y * mypointcloud.row_step) + (x * mypointcloud.point_step)
-            mypoint = struct.unpack_from('fff', mypointcloud.data, offset=index)
+            try:
+            	mypoint = struct.unpack_from('fff', mypointcloud.data, offset=index)
+            	self.save_mypoint = mypoint
+            except:
+            	mypoint = self.save_mypoint
             x, y, z = mypoint
-            self.marker_pub(x, y, z)
             return mypoint
         else:
             return None
