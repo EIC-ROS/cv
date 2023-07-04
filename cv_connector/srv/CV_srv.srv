@@ -1,4 +1,5 @@
 cv_connector/CV_type cv_type
+string req_info
 ---
 sensor_msgs/CameraInfo camera_info
 sensor_msgs/PointCloud2 pointcloud

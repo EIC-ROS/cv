@@ -17,6 +17,8 @@ class CVConnector:
 
     with open(RosPack().get_path("cv_connector") + "/cfg/cv_info.yaml", "r") as doc:
         cv_info = Munch(yaml.safe_load(doc))
+    
+    
 
     bridge = CvBridge()
 
@@ -26,6 +28,7 @@ class CVConnector:
         self.cv_server = rospy.Service(
             "/CV_connect/req_cv", CV_srv, self.cv_request)
         self.__open_socket()
+        rospy.loginfo("\x1b[38;5;39m"+"[CV_CONNECTER]: Ready for request"+'\x1b[0m')
 
         # PEFR
         self.name_map = dict()
@@ -46,6 +49,7 @@ class CVConnector:
         message_synchronizer = message_filters.TimeSynchronizer(
             [camera_info, camera_image,depth_image,point_cloud], queue_size=1)
         message_synchronizer.registerCallback(self.image_callback)
+        rospy.loginfo("\x1b[38;5;39m"+"[CAMERA]: Ready"+'\x1b[0m')
 
     def __open_socket(self):
         host = socket.gethostname()
@@ -59,6 +63,7 @@ class CVConnector:
         self.client_pe.clientConnect()
         self.client_ic.clientConnect()
         self.client_fr.clientConnect()
+        rospy.loginfo("\x1b[38;5;39m"+"[CV]: Ready"+'\x1b[0m')
 
     def image_callback(self, info_msg: CameraInfo, image_msg: Image, depth_msg: Image, point_cloud_msg: PointCloud2):
         self.image = image_msg
@@ -68,6 +73,8 @@ class CVConnector:
 
     def cv_request(self, cv_req: CV_srvRequest):
         error = False
+        req_info = ""
+        
         cv_type = cv_req.cv_type
 
         image = self.image
@@ -98,8 +105,13 @@ class CVConnector:
                 register_person_id = max(res_pe, key=lambda x: res_pe[x]['area'])
                 print("Registering ", register_person_id)
 
+                if cv_req.req_info:
+                    register_name = cv_req.req_info
+                else:
+                    register_name = "target"
+
                 # register_name = input("name: ")
-                register_name = "target"
+                # register_name = "target"
                 register_person = res_pe[register_person_id]
                 if "facedim" in register_person:
                     face_dim = register_person["facedim"]
@@ -173,6 +185,10 @@ class CVConnector:
                 res = res_ic
             else:
                 res = "No person to caption"
+
+        elif cv_type.type == CV_type.BAE:
+            "TODO"
+            msg = ""
 
         else:
             rospy.logerr("Error CV_type: %s" % (cv_type))
