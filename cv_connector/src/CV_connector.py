@@ -186,6 +186,10 @@ class CVConnector:
             else:
                 res = "No person to caption"
 
+        elif cv_type.type == CV_type.BAE:
+            "TODO"
+            msg = ""
+
         else:
             rospy.logerr("Error CV_type: %s" % (cv_type))
             error = True
