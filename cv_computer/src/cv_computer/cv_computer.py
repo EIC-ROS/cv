@@ -74,11 +74,11 @@ class cv_computer:
             assert isinstance(mypointcloud, PointCloud2)
             index = (y * mypointcloud.row_step) + (x * mypointcloud.point_step)
             try:
-            	mypoint = struct.unpack_from('fff', mypointcloud.data, offset=index)
-            	self.save_mypoint = mypoint
+                mypoint = struct.unpack_from('fff', mypointcloud.data, offset=index)
+                self.save_mypoint = mypoint
             except:
             	mypoint = self.save_mypoint
-            x, y, z = mypoint
+            
             return mypoint
         else:
             return None
