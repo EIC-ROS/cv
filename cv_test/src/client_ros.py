@@ -10,6 +10,8 @@ import cv_bridge
 import sensor_msgs.msg
 import std_msgs.msg
 import rospkg
+from rospy_message_converter import message_converter
+from std_msgs.msg import String
 
 rospy.init_node("test")
 ip= rospy.Publisher("/test/img",sensor_msgs.msg.Image,queue_size=1)
@@ -38,7 +40,9 @@ host = socket.gethostname()
 port = 12305
 
 c = CustomSocket(host, port)
+
 c.clientConnect()
+
 
 # cap = cv2.VideoCapture(list_available_cam(10))
 cap = cv2.VideoCapture("/home/nitro20/walkie_ws/src/cv/cv_test/src/dof_test_2.mp4")
@@ -60,7 +64,9 @@ while cap.isOpened():
     msg = c.req(frame)
 
     ip.publish(img)
-    sp.publish(str(msg))
+    message = String(str(msg))
+    # message = message_converter.convert_dictionary_to_ros_message('std_msgs/String', msg)
+    sp.publish(message)
 
     
     

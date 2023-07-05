@@ -11,7 +11,7 @@ import numpy as np
 from munch import Munch
 import yaml
 from rospkg import RosPack
-
+import colorama
 
 class CVConnector:
 
@@ -24,11 +24,13 @@ class CVConnector:
 
     def __init__(self):
 
-        self.__subscribing_cameara()
-        self.cv_server = rospy.Service(
-            "/CV_connect/req_cv", CV_srv, self.cv_request)
-        self.__open_socket()
-        rospy.loginfo("\x1b[38;5;39m"+"[CV_CONNECTER]: Ready for request"+'\x1b[0m')
+        if self.__subscribing_cameara() and self.__open_socket():
+            pass
+        
+      
+        rospy.logwarn(f"{colorama.Fore.BLUE}[CV_CONNECTER]: Opening the Server...{colorama.Fore.RESET}")
+        self.cv_server = rospy.Service("/CV_connect/req_cv", CV_srv, self.cv_request)
+        rospy.loginfo(f"{colorama.Style.BRIGHT}{colorama.Fore.LIGHTCYAN_EX}[CV_CONNECTER]: Ready for request{colorama.Style.RESET_ALL}")
 
         # PEFR
         self.name_map = dict()
@@ -36,8 +38,9 @@ class CVConnector:
         self.frame_count_interval = 10
 
     def __subscribing_cameara(self):
-        rospy.loginfo("Waiting for camera info...")
+        rospy.logwarn(f"{colorama.Fore.BLUE}[CAMERA]: Waiting for camera info...{colorama.Fore.RESET}")
         rospy.wait_for_message("/zed2i/zed_node/rgb/camera_info", CameraInfo)
+
         camera_info = message_filters.Subscriber(
             "/zed2i/zed_node/rgb/camera_info", CameraInfo)
         camera_image = message_filters.Subscriber(
@@ -46,10 +49,12 @@ class CVConnector:
             "/zed2i/zed_node/depth/depth_registered", Image)
         point_cloud = message_filters.Subscriber(
             "/zed2i/zed_node/point_cloud/cloud_registered", PointCloud2)
+        
         message_synchronizer = message_filters.TimeSynchronizer(
             [camera_info, camera_image,depth_image,point_cloud], queue_size=1)
         message_synchronizer.registerCallback(self.image_callback)
         rospy.loginfo("\x1b[38;5;39m"+"[CAMERA]: Ready"+'\x1b[0m')
+        return True
 
     def __open_socket(self):
         host = socket.gethostname()
@@ -59,11 +64,41 @@ class CVConnector:
         self.client_ic = CustomSocket(host, 12303)
         self.client_fr = CustomSocket(host, 12304)
 
-        self.client_yolov8.clientConnect()
-        self.client_pe.clientConnect()
-        self.client_ic.clientConnect()
-        self.client_fr.clientConnect()
-        rospy.loginfo("\x1b[38;5;39m"+"[CV]: Ready"+'\x1b[0m')
+        client_list = [self.client_yolov8,
+                       self.client_pe,
+                       self.client_ic,
+                       self.client_fr]
+        
+        check_list = [False]*len(client_list)
+        check_times = 0
+
+        rospy.logwarn(f"{colorama.Fore.BLUE}[CV]: Waiting for Socket Server to open...{colorama.Fore.RESET}")
+
+        while not rospy.is_shutdown():
+            rospy.sleep(0.5)
+
+            for idx, client in enumerate(client_list):
+                if not check_list[idx]:
+                    status = client.clientConnect()
+                    if status:
+                        check_list[idx] = status
+                        show = f"{colorama.Fore.WHITE}["
+                        for stat in check_list:
+                            if stat:
+                                show += f"{colorama.Fore.GREEN} True  "
+                            else:
+                                show += f"{colorama.Fore.RED} False "
+                        show += f"{colorama.Fore.WHITE}]"
+
+                        rospy.logwarn(f"{colorama.Fore.RED}[CV]: Status: " + show +f'{colorama.Fore.RESET}')
+
+            if all(check_list):
+                rospy.loginfo(f"{colorama.Fore.LIGHTGREEN_EX}[CV]: Status: [    ALL SERVER AVAILABLE    ]{colorama.Fore.RESET}")
+                rospy.loginfo("\x1b[38;5;39m"+"[CV]: Ready"+'\x1b[0m')
+                break
+        return True
+
+        
 
     def image_callback(self, info_msg: CameraInfo, image_msg: Image, depth_msg: Image, point_cloud_msg: PointCloud2):
         self.image = image_msg

@@ -78,7 +78,7 @@ class cv_computer:
                 self.save_mypoint = mypoint
             except:
             	mypoint = self.save_mypoint
-            
+                
             return mypoint
         else:
             return None

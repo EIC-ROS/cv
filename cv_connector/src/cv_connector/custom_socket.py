@@ -2,6 +2,8 @@ import socket
 import struct
 import numpy as np
 import json
+import rospy
+import colorama
 
 
 class CustomSocket:
@@ -35,10 +37,10 @@ class CustomSocket:
         try:
             self.sock.connect((self.host, self.port))
             if self.log:
-                print("[SOCKET CLIENT CONNECTED TO " +
-                      str(self.host)+" "+str(self.port)+"]")
+                rospy.loginfo(f"{colorama.Fore.MAGENTA}[SOCKET CLIENT CONNECTED TO " +
+                      str(self.host)+" "+str(self.port)+f"]{colorama.Style.RESET_ALL}")
         except Exception as e:
-            print("Error :", e)
+            # print("Error :", e)
             return False
         return True
 
