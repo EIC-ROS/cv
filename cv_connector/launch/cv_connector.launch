@@ -1,0 +1,5 @@
+<launch>
+    <rosparam file="$(find cv_connector)/config/cv_info.yaml" ns="cv_connector"/>
+    <node name="cv_connector" pkg="cv_connector" type="CV_connector.py" output="screen" launch-prefix="gnome-terminal --command" />
+
+</launch>

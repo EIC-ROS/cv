@@ -30,20 +30,16 @@ class FixedTFBroadcaster:
         self.client = rospy.ServiceProxy("cv_connector",CV_srv)
         self.sub = rospy.Subscriber("/test/str",String,self.cv_res)
     
-    def cb(self,msg):
-        pass
-    
     def cv_res(self,msg):
         res = message_converter.convert_ros_message_to_dictionary(msg)
-
-        
+        self.client_fr = CustomSocket(host, 12304)
         # print(repr(msg))
         # fix_msgs = str(msg).replace("\n",'').replace("\\",'').replace(" ",'')
         # res = literal_eval(fix_msgs)
         R_dict = {}
 
         try:
-            data = res["data"]
+            data = result["data"]
             data = literal_eval(data)
             for id,value in data.items():
                 x_vector = np.array(value["normal0"])
