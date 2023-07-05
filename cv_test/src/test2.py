@@ -20,18 +20,17 @@ class FixedTFBroadcaster:
     def __init__(self):
         self.pub_tf = rospy.Publisher("/tf", tf2_msgs.msg.TFMessage, queue_size=1)
         self.client = rospy.ServiceProxy("cv_connector",CV_srv)
-        self.sub = rospy.Subscriber("/test/str",String,self.cv_res)
     
-    def cv_res(self,msg):
-        res = message_converter.convert_ros_message_to_dictionary(msg)
-        self.client_fr = CustomSocket(host, 12304)
-        # print(repr(msg))
-        # fix_msgs = str(msg).replace("\n",'').replace("\\",'').replace(" ",'')
-        # res = literal_eval(fix_msgs)
+    def cv_res(self):
+        req = CV_srvRequest()
+        req.cv_type.type = CV_type.BAE
+        res = self.client(req)
+        msg = res.result
+        result = message_converter.convert_ros_message_to_dictionary(msg)
         R_dict = {}
 
         try:
-            data = res["data"]
+            data = result["data"]
             data = literal_eval(data)
             for id,value in data.items():
                 x_vector = np.array(value["normal0"])

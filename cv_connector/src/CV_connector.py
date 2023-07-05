@@ -9,16 +9,11 @@ from cv_connector.srv import CV_srv, CV_srvRequest, CV_srvResponse
 from cv_connector.custom_socket import CustomSocket
 import numpy as np
 from munch import Munch
-import yaml
+import rosparam
 from rospkg import RosPack
 import colorama
 
 class CVConnector:
-
-    with open(RosPack().get_path("cv_connector") + "/cfg/cv_info.yaml", "r") as doc:
-        cv_info = Munch(yaml.safe_load(doc))
-    
-    
 
     bridge = CvBridge()
 

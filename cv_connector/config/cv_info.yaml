@@ -1,10 +1,6 @@
 state: default
 
 # CV information
-
-package: cv_connector
-cv-main_config: cv_main.yaml
-
 pull-image_size:
   width: 1280
   height: 736
