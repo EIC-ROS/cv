@@ -63,11 +63,13 @@ class CVConnector:
         self.client_pe = CustomSocket(host, 12302)
         self.client_ic = CustomSocket(host, 12303)
         self.client_fr = CustomSocket(host, 12304)
+        self.client_bea = CustomSocket(host, 12305)
 
         client_list = [self.client_yolov8,
                        self.client_pe,
                        self.client_ic,
-                       self.client_fr]
+                       self.client_fr,
+                       self.client_bea]
         
         check_list = [False]*len(client_list)
         check_times = 0
@@ -130,6 +132,10 @@ class CVConnector:
 
         if cv_type.type == CV_type.YoloV8_Tracker:
             res = self.client_yolov8.req(pull_image)
+
+        elif cv_type.type == CV_type.HumanPoseEstimation:
+            res = self.client_pe.req_with_command(
+                pull_image, {"detect_face": False, "detect_pose": True})
 
         elif cv_type.type == CV_type.TargetTracker_Register:
             msg = self.client_pe.req_with_command(
@@ -215,19 +221,28 @@ class CVConnector:
                 x1, y1, x2, y2 = caption_person["bbox"]
                 cropped_caption_person = pull_image[y1:y2, x1:x2]
 
-                res_ic = self.client_ic.req(pull_image)
+                res_ic = self.client_ic.req_with_command(pull_image, command={"task":"CAPTION"})
 
                 res = res_ic
             else:
                 res = "No person to caption"
 
+        elif cv_type.type == CV_type.VQA:
+            # Visual Question Answering, req_info = string of questions seperated by ,
+            if cv_req.req_info:
+                questions = cv_req.req_info.split(",")
+            else:
+                questions = ["Where is it?"]
+            res = self.client_ic.req_with_command(pull_image, command={"task":"ASK", "questions":questions})
+
+
         elif cv_type.type == CV_type.BAE:
-            "TODO"
-            msg = ""
+            res = self.client_bea.req(pull_image)
 
         else:
             rospy.logerr("Error CV_type: %s" % (cv_type))
             error = True
+
 
         srv_res = CV_srvResponse()
         if not error:

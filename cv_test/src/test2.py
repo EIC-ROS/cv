@@ -11,20 +11,32 @@ from ast import literal_eval
 from std_msgs.msg import String
 from rospy_message_converter import message_converter
 from std_msgs.msg import String
-import custom_socket
+from custom_socket import CustomSocket
+import socket
+from sensor_msgs.msg import Image
+
 
 
 class FixedTFBroadcaster:
 
 
     def __init__(self):
+        host = socket.gethostname()
+        self.client_fr = CustomSocket(host, 12305)
+        self.client_fr.clientConnect()
+
+        self.subimg = rospy.Subscriber("/zed2i/zed_node/rgb/image_rect_color", Image,self.cb)
         self.pub_tf = rospy.Publisher("/tf", tf2_msgs.msg.TFMessage, queue_size=1)
         self.client = rospy.ServiceProxy("cv_connector",CV_srv)
         self.sub = rospy.Subscriber("/test/str",String,self.cv_res)
     
+    def cb(self,msg):
+        pass
+    
     def cv_res(self,msg):
         res = message_converter.convert_ros_message_to_dictionary(msg)
-        self.client_fr = CustomSocket(host, 12304)
+
+        
         # print(repr(msg))
         # fix_msgs = str(msg).replace("\n",'').replace("\\",'').replace(" ",'')
         # res = literal_eval(fix_msgs)
