@@ -17,14 +17,15 @@ class CVConnector:
 
     bridge = CvBridge()
 
-    def __init__(self):
+    def __init__(self, cv_param = rosparam.get_param("cv_connector")):
+        self.cv_param = cv_param
 
         if self.__subscribing_cameara() and self.__open_socket():
             pass
         
       
         rospy.logwarn(f"{colorama.Fore.BLUE}[CV_CONNECTER]: Opening the Server...{colorama.Fore.RESET}")
-        self.cv_server = rospy.Service("/CV_connect/req_cv", CV_srv, self.cv_request)
+        self.cv_server = rospy.Service(self.cv_param["cv_server"], CV_srv, self.cv_request)
         rospy.loginfo(f"{colorama.Style.BRIGHT}{colorama.Fore.LIGHTCYAN_EX}[CV_CONNECTER]: Ready for request{colorama.Style.RESET_ALL}")
 
         # PEFR
@@ -35,16 +36,16 @@ class CVConnector:
 
     def __subscribing_cameara(self):
         rospy.logwarn(f"{colorama.Fore.BLUE}[CAMERA]: Waiting for camera info...{colorama.Fore.RESET}")
-        rospy.wait_for_message("/zed2i/zed_node/rgb/camera_info", CameraInfo)
+        rospy.wait_for_message(self.cv_param["info_topic"] , CameraInfo)
 
         camera_info = message_filters.Subscriber(
-            "/zed2i/zed_node/rgb/camera_info", CameraInfo)
+            self.cv_param["info_topic"]  , CameraInfo)
         camera_image = message_filters.Subscriber(
-            "/zed2i/zed_node/rgb/image_rect_color", Image)
+            self.cv_param["image_topic"] , Image)
         depth_image = message_filters.Subscriber(
-            "/zed2i/zed_node/depth/depth_registered", Image)
+            self.cv_param["depth_topic"] , Image)
         point_cloud = message_filters.Subscriber(
-            "/zed2i/zed_node/point_cloud/cloud_registered", PointCloud2)
+            self.cv_param["pcl2_topic"]  , PointCloud2)
         
         message_synchronizer = message_filters.TimeSynchronizer(
             [camera_info, camera_image,depth_image,point_cloud], queue_size=1)
@@ -59,13 +60,12 @@ class CVConnector:
         self.client_pe = CustomSocket(host, 12302)
         self.client_ic = CustomSocket(host, 12303)
         self.client_fr = CustomSocket(host, 12304)
-        self.client_bea = CustomSocket(host, 12305)
+        #self.client_bea = CustomSocket(host, 12305)
 
         client_list = [self.client_yolov8,
                        self.client_pe,
                        self.client_ic,
-                       self.client_fr,
-                       self.client_bea]
+                       self.client_fr]
         
         check_list = [False]*len(client_list)
         check_times = 0
@@ -118,7 +118,7 @@ class CVConnector:
         try:
             cv_image = self.bridge.imgmsg_to_cv2(
                 image, desired_encoding="bgr8")
-            pull_image = cv2.resize(cv_image, (1280, 736))
+            pull_image = cv2.resize(cv_image, (int(self.cv_param["pull_image_size"]["width"]), int(self.cv_param["pull_image_size"]["height"])))
         except CvBridgeError as e:
             rospy.logerr(e)
             error = True
@@ -168,7 +168,7 @@ class CVConnector:
                 res = "No person detect"
                 # print(res)
 
-        elif cv_type.type == CV_type.TargetTracker_Detect:
+        elif cv_type.type == CV_type.TargetTrackerOld_Detect:
             msg = self.client_pe.req_with_command(
                 pull_image, {"detect_face": True, "detect_pose": False})
             if msg.get('res'):
@@ -204,7 +204,7 @@ class CVConnector:
                             person["name"] = self.name_map[person_id]
             res = msg
 
-        elif cv_type.type == CV_type.TargetTrackerMod_Detect:
+        elif cv_type.type == CV_type.TargetTracker_Detect:
             msg = self.client_pe.req_with_command(pull_image, {"detect_face": True, "detect_pose": True})
 
             if msg.get('res'):
@@ -248,11 +248,12 @@ class CVConnector:
                             person["name"] = "unknown"
 
                             new_res[person_id] = person
-
-                    min_distance = min(all_distance.keys())
-                    if min_distance < 0.3:
-                        new_target_id = all_distance[min_distance]
-                        new_res[new_target_id]["name"] = "target"
+                            
+                    if all_distance:
+                        min_distance = min(all_distance.keys())
+                        if min_distance < 0.3:
+                            new_target_id = all_distance[min_distance]
+                            new_res[new_target_id]["name"] = "target"
                 
                 res = msg
                 res["res"] = new_res
