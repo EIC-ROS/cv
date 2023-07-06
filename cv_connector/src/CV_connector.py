@@ -31,6 +31,7 @@ class CVConnector:
         self.name_map = dict()
         self.frame_count = 0
         self.frame_count_interval = 10
+        self.target_id = -1
 
     def __subscribing_cameara(self):
         rospy.logwarn(f"{colorama.Fore.BLUE}[CAMERA]: Waiting for camera info...{colorama.Fore.RESET}")
@@ -202,25 +203,80 @@ class CVConnector:
                         else:
                             person["name"] = self.name_map[person_id]
             res = msg
+
+        elif cv_type.type == CV_type.TargetTrackerMod_Detect:
+            msg = self.client_pe.req_with_command(pull_image, {"detect_face": True, "detect_pose": True})
+
+            if msg.get('res'):
+                res_pe = msg["res"]
+                new_res = dict()
+                all_distance = dict()
+                if self.target_id in res_pe.keys():
+                    for person_id, person in res_pe.items():
+                        if "facedim" in person:
+                            face_dim = person["facedim"]
+                            face_img = np.array(person["faceflatten"].split(
+                                ", ")).reshape(face_dim + [3]).astype("uint8")
+                            person.pop("faceflatten")
+
+                            if person_id == self.target_id:
+                                person["name"] = "target"
+                                print(f"{person_id} is a target")
+                            else:
+                                person["name"] = "unknown"
+                        new_res[person_id] = person  
+
+                else:
+                    for person_id, person in res_pe.items():
+                        print(person["center"])
+                        print(person["area"])
+                        if "pose" in person:
+                            print(person["pose"])
+                        if "facedim" in person:
+                            face_dim = person["facedim"]
+                            face_img = np.array(person["faceflatten"].split(
+                                ", ")).reshape(face_dim + [3]).astype("uint8")
+                            person.pop("faceflatten")
+                            res_fr = self.client_fr.req_with_command(
+                                    face_img, command={"task": "DETECT", "name": "", "only_face": True, "one_target": True}).get("res")
+                            # print(res_fr)
+                            if res_fr.get("distance"):
+                                all_distance[res_fr["distance"]] = person_id
+                            else:
+                                all_distance[999] = person_id
+
+                            person["name"] = "unknown"
+
+                            new_res[person_id] = person
+
+                    min_distance = min(all_distance.keys())
+                    if min_distance < 0.3:
+                        new_target_id = all_distance[min_distance]
+                        new_res[new_target_id]["name"] = "target"
+                
+                res = msg
+                res["res"] = new_res
+                
+                
         
-        elif cv_type.type == CV_type.PoseCaptioning:
-            msg = self.client_pe.req_with_command(
-                pull_image, {"detect_face": False, "detect_pose": False})
-            if msg.get("res"):
-                res_pe = msg.get("res")
+            elif cv_type.type == CV_type.PoseCaptioning:
+                msg = self.client_pe.req_with_command(
+                    pull_image, {"detect_face": False, "detect_pose": False})
+                if msg.get("res"):
+                    res_pe = msg.get("res")
 
-                # Find person with biggest area to caption
-                caption_person_id = max(res_pe, key=lambda x: res_pe[x]['area'])
+                    # Find person with biggest area to caption
+                    caption_person_id = max(res_pe, key=lambda x: res_pe[x]['area'])
 
-                caption_person = res_pe[caption_person_id]
-                x1, y1, x2, y2 = caption_person["bbox"]
-                cropped_caption_person = pull_image[y1:y2, x1:x2]
+                    caption_person = res_pe[caption_person_id]
+                    x1, y1, x2, y2 = caption_person["bbox"]
+                    cropped_caption_person = pull_image[y1:y2, x1:x2]
 
-                res_ic = self.client_ic.req_with_command(pull_image, command={"task":"CAPTION"})
+                    res_ic = self.client_ic.req_with_command(pull_image, command={"task":"CAPTION"})
 
-                res = res_ic
-            else:
-                res = "No person to caption"
+                    res = res_ic
+                else:
+                    res = "No person to caption"
 
         elif cv_type.type == CV_type.VQA:
             # Visual Question Answering, req_info = string of questions seperated by ,
