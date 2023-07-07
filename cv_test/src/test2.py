@@ -32,10 +32,7 @@ class FixedTFBroadcaster:
     
     def cv_res(self,msg):
         res = message_converter.convert_ros_message_to_dictionary(msg)
-        self.client_fr = CustomSocket(host, 12304)
-        # print(repr(msg))
-        # fix_msgs = str(msg).replace("\n",'').replace("\\",'').replace(" ",'')
-        # res = literal_eval(fix_msgs)
+        
         R_dict = {}
 
         try:

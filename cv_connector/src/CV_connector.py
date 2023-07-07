@@ -60,12 +60,13 @@ class CVConnector:
         self.client_pe = CustomSocket(host, 12302)
         self.client_ic = CustomSocket(host, 12303)
         self.client_fr = CustomSocket(host, 12304)
-        #self.client_bea = CustomSocket(host, 12305)
+        self.client_bea = CustomSocket(host, 12305)
 
         client_list = [self.client_yolov8,
                        self.client_pe,
                        self.client_ic,
-                       self.client_fr]
+                       self.client_fr,
+                       self.client_bea]
         
         check_list = [False]*len(client_list)
         check_times = 0
@@ -167,42 +168,6 @@ class CVConnector:
             else:
                 res = "No person detect"
                 # print(res)
-
-        elif cv_type.type == CV_type.TargetTrackerOld_Detect:
-            msg = self.client_pe.req_with_command(
-                pull_image, {"detect_face": True, "detect_pose": False})
-            if msg.get('res'):
-                res_pe = msg.get("res")
-                for person_id, person in res_pe.items():
-                    if "facedim" in person:
-                        face_dim = person["facedim"]
-                        face_img = np.array(person["faceflatten"].split(
-                            ", ")).reshape(face_dim + [3]).astype("uint8")
-                        person.pop("faceflatten")
-
-                        if person_id not in self.name_map:
-                            res_fr = self.client_fr.req_with_command(
-                                pull_image, command={"task": "DETECT", "name": "", "only_face": True}).get("res")
-                            # print(res_fr)
-                            if res_fr:
-                                self.name_map[person_id] = res_fr["name"]
-                            else:
-                                self.name_map[person_id] = "unknown"
-                        else:
-                            if self.name_map[person_id] == "unknown" and self.frame_count % self.frame_count_interval == 0:
-                                res_fr = self.client_fr.req_with_command(
-                                    pull_image, command={"task": "DETECT", "name": "", "only_face": True}).get('res')
-                                if res_fr:
-                                    self.name_map[person_id] = res_fr["name"]
-
-                        person["name"] = self.name_map[person_id]
-
-                    else:
-                        if person_id not in self.name_map:
-                            person["name"] = "unknown"
-                        else:
-                            person["name"] = self.name_map[person_id]
-            res = msg
 
         elif cv_type.type == CV_type.TargetTracker_Detect:
             msg = self.client_pe.req_with_command(pull_image, {"detect_face": True, "detect_pose": True})
